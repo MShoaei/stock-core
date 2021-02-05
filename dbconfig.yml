@@ -1,0 +1,4 @@
+development:
+  dialect: postgres
+  datasource: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:${POSTGRES_PORT}/${DATABASE_NAME}?sslmode=disable
+  dir: migrations
