@@ -1,7 +1,7 @@
 # Stock market core
 ## What is this?
 This is an attempt to create a high performance API (core) for an imaginary stock market with as many users as possible.
-##Why?
+## Why?
 1. I wanted to create something to learn more about [Go](https://golang.org/) and challenge my knowledge.
 2. I wanted to add a well-documented and well-tested project to my resume, and I hope that this would be it!.
 3. [Iran's Stock market](http://www.tsetmc.com) has suffered so many outages and is still performing poorly, so I wonder if I can create something better.
