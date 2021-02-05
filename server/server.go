@@ -2,15 +2,18 @@ package server
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4"
 	"log"
 	"os"
+
+	"github.com/alexedwards/argon2id"
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v4"
 )
 
 type Server struct {
-	db     *pgx.Conn
-	router *gin.Engine
+	db         *pgx.Conn
+	router     *gin.Engine
+	hashParams *argon2id.Params
 }
 
 func NewServer() *Server {
@@ -22,12 +25,27 @@ func NewServer() *Server {
 		log.Fatal(err)
 	}
 
-	s.router = NewAPI()
+	s.hashParams = &argon2id.Params{
+		Memory:      64 * 1024,
+		Iterations:  1,
+		Parallelism: 2,
+		SaltLength:  16,
+		KeyLength:   32,
+	}
+
+	s.router = s.NewAPI()
 	return s
 }
 
-func NewAPI() *gin.Engine {
+func (s *Server) NewAPI() *gin.Engine {
 	app := gin.Default()
 
+	api := app.Group("/api")
+	api.POST("register", s.registerHandler)
+
 	return app
+}
+
+func (s *Server) Run(addr ...string) error {
+	return s.router.Run(addr...)
 }

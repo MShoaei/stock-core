@@ -1,9 +1,8 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import "github.com/MShoaei/stock-core/server"
 
 func main() {
-	r := gin.Default()
-
-	r.Run()
+	s := server.NewServer()
+	s.Run()
 }
