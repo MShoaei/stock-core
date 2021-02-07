@@ -20,3 +20,8 @@ This is an attempt to create a high performance API (core) for an imaginary stoc
 
 + use `$ make destroy` to delete the database
 + use `$ make clean` to rollback all the migrations
+
+## Resources
+[Nic Jackson's amazing tutorial about microservices](https://www.youtube.com/playlist?list=PLmD8u-IFdreyh6EUfevBcbiuCKzFk0EW_)
+
+[Florin Patan's talk about microservices at GopherCon UK 2018](https://www.youtube.com/watch?v=wxkEQxvxs3w)

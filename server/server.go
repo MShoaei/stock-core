@@ -1,51 +1,33 @@
 package server
 
 import (
-	"context"
-	"log"
-	"os"
-
-	"github.com/alexedwards/argon2id"
+	"github.com/MShoaei/stock-core/marketuser"
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/sirupsen/logrus"
 )
 
-type Server struct {
-	db         *pgx.Conn
-	router     *gin.Engine
-	hashParams *argon2id.Params
-}
+func New(log *logrus.Logger, db *pgxpool.Pool, authMiddleware *jwt.GinJWTMiddleware) *gin.Engine {
+	e := gin.Default()
 
-func NewServer() *Server {
-	s := &Server{}
-	datasource := os.ExpandEnv("host=127.0.0.1 port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable")
+	e.POST("/login", authMiddleware.LoginHandler)
 
-	var err error
-	if s.db, err = pgx.Connect(context.Background(), datasource); err != nil {
-		log.Fatal(err)
+	{
+		authGroup := e.Group("/auth")
+		authGroup.GET("/refresh-token", authMiddleware.RefreshHandler)
+		authGroup.GET("/logout", authMiddleware.LogoutHandler)
 	}
 
-	s.hashParams = &argon2id.Params{
-		Memory:      64 * 1024,
-		Iterations:  1,
-		Parallelism: 2,
-		SaltLength:  16,
-		KeyLength:   32,
+	{
+		mu := marketuser.NewHandlers(log, db)
+		userGroup := e.Group("/users")
+		userGroup.POST("/", mu.CreateMarketUser)
+		userGroup.Use(authMiddleware.MiddlewareFunc())
+		userGroup.GET("/", mu.GetMarketUser)
+		//userGroup.PATCH()
+		//userGroup.DELETE()
 	}
 
-	s.router = s.NewAPI()
-	return s
-}
-
-func (s *Server) NewAPI() *gin.Engine {
-	app := gin.Default()
-
-	api := app.Group("/api")
-	api.POST("register", s.registerHandler)
-
-	return app
-}
-
-func (s *Server) Run(addr ...string) error {
-	return s.router.Run(addr...)
+	return e
 }
