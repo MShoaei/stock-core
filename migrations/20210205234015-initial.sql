@@ -4,11 +4,12 @@ CREATE TABLE IF NOT EXISTS market_user
     id            SERIAL PRIMARY KEY,
     first_name    VARCHAR(100) NOT NULL,
     last_name     VARCHAR(100) NOT NULL,
-    national_code CHAR(10)     NOT NULL UNIQUE,
-    password      CHAR(97)     NOT NULL,
+    national_code VARCHAR(10)  NOT NULL UNIQUE,
+    password      VARCHAR(97)  NOT NULL,
 
-    last_login    TIMESTAMP WITH TIME ZONE,
-    created_at    TIMESTAMP WITH TIME ZONE DEFAULT now()
+    last_login    TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at    TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS symbol
@@ -17,7 +18,7 @@ CREATE TABLE IF NOT EXISTS symbol
     isin          VARCHAR(10) NOT NULL UNIQUE,
     initial_price MONEY       NOT NULL,
 
-    created_at    TIMESTAMP WITH TIME ZONE DEFAULT now()
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TYPE ORDER_SIDE AS ENUM ('buy', 'sell');
@@ -32,9 +33,9 @@ CREATE TABLE IF NOT EXISTS market_order
     price           MONEY      NOT NULL,
     side            ORDER_SIDE NOT NULL,
 
-    created_at      TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    filled_at       TIMESTAMP WITH TIME ZONE,
-    cancelled_at    TIMESTAMP WITH TIME ZONE
+    created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    filled_at       TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    cancelled_at    TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS transaction
