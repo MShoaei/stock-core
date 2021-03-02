@@ -9,26 +9,27 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/MShoaei/stock-core/database"
 	"github.com/MShoaei/stock-core/server"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
 )
 
-var log = logrus.New()
-
 func main() {
+	var logger = logrus.New()
 
-	db, err := getDB()
+	db, err := database.GetDB()
 	if err != nil {
-		log.Fatalf("failed to create DB connection: %v\n", err)
+		logger.Fatalf("failed to create DB connection: %v\n", err)
 	}
 
-	authMiddleware := NewJWTMiddleware(db)
-
-	s := server.New(log, db, authMiddleware)
+	s := server.New(logger, db)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9090"
+	}
 
 	srv := &http.Server{
-		Addr:         ":9090",
+		Addr:         ":" + port,
 		Handler:      s,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -37,7 +38,7 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) {
-			log.Printf("listen: %s\n", err)
+			logger.Printf("listen: %s\n", err)
 		}
 	}()
 
@@ -49,7 +50,7 @@ func main() {
 	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	logger.Println("Shutting down server...")
 
 	// The context is used to inform the server it has 5 seconds to finish
 	// the request it is currently handling
@@ -57,21 +58,8 @@ func main() {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+		logger.Fatal("Server forced to shutdown:", err)
 	}
 
-	log.Println("Server exiting")
-
-}
-
-func getDB() (*pgxpool.Pool, error) {
-	datasource := os.ExpandEnv("host=${POSTGRES_HOST} port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${DATABASE_NAME} sslmode=disable")
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
-	db, err := pgxpool.Connect(ctx, datasource)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
+	logger.Println("Server exiting")
 }
